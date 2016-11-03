@@ -13,7 +13,7 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-
+        \App\Console\Commands\QueryHourly::class,
     ];
 
     /**
@@ -24,6 +24,9 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-
+        $schedule->command('hourly')
+            ->hourly()
+            ->timezone('Asia/Seoul')
+            ->between('11:00', '23:00');
     }
 }
