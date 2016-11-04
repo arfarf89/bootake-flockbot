@@ -27,7 +27,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('hourly')
             ->hourly()
-            ->timezone('Asia/Seoul');
+            ->timezone('Asia/Seoul')
             ->between('0:59', '23:01');
 
         $schedule->command('daily')
