@@ -109,7 +109,7 @@ class Daily extends Command
         curl_close($newCurl);
     }
 
-    private function purchase($today)
+    private function purchase($today) {
         $api_secret = "4e4ed3a7df70b32e07cf956c2d79dc4f";
         $headers = array("Authorization: Basic " . base64_encode($api_secret));
 
