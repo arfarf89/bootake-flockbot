@@ -38,8 +38,8 @@ class QueryHourly extends Command
         $day = $today->format('d');
         $hour = strval($today->format('H'));
 
-        $purchaseMsg = "========================\n" . $month . '월 ' . $day . "일 " . ($hour - 1) . "시 - " .
-                        $hour . "시 주문 현황\n" . "========================\n";
+        $purchaseMsg = "========================\n" . $month . '월 ' . $day . "일 " . $hour . "시 - " .
+                        ($hour + 1) . "시 주문 현황\n" . "========================\n";
 
         $peperoEventCount = 0;
         $couponCount = 0;
