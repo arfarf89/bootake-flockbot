@@ -59,7 +59,7 @@ class Daily extends Command
                     $generalOrderCount += 1;
                 }
 
-                if ($event["properties"]["Coupon"] != null) {
+                if (isset($event["properties"]["Coupon"])) {
                     $couponCount += 1;
                 }
 
