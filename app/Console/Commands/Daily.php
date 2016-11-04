@@ -44,16 +44,19 @@ class Daily extends Command
         $cuAppCount = 0;
         $cuCount = 0;
         $signUpCount = 0;
+        $generalOrderCount = 0;
         $orderCount = 0;
 
         foreach ($purchaseData as $event) {
 
-            if ($event["name"] == "Submit Cart") {
+            if ($event["name"] == "Create Order") {
                 // TODO Match with storeid
                 if ($event["properties"]["Store Name"] == "CU 빼빼로데이 예약배송 이벤트!") {
                     $peperoEventCount += 1;
                 } elseif (strpos($event["properties"]["Store Name"], 'CU') !== false) {
                     $cuCount += 1;
+                } else {
+                    $generalOrderCount += 1;
                 }
 
                 if ($event["properties"]["Coupon"] != null) {
@@ -75,9 +78,11 @@ class Daily extends Command
         $purchaseMsg = $purchaseMsg . "회원 가입: $signUpCount 건\n\n";
 
         $purchaseMsg = $purchaseMsg . "주문 정보:\n";
-        $purchaseMsg = $purchaseMsg . "\t빼빼로 예약배송: $peperoEventCount 건\n";
-        $purchaseMsg = $purchaseMsg . "\t쿠폰 이용: $couponCount 건\n";
-        $purchaseMsg = $purchaseMsg . "\tCU: $cuCount 건\n";
+        $purchaseMsg = $purchaseMsg . "\t빼빼로 예약배송 주문: $peperoEventCount 건\n";
+        $purchaseMsg = $purchaseMsg . "\t일반 CU 주문: $cuCount 건 (CU앱: $cuAppCount 건) \n";
+        $purchaseMsg = $purchaseMsg . "\t맛집 주문: $generalOrderCount 건\n\n";
+        
+        $purchaseMsg = $purchaseMsg . "\t총 쿠폰 이용 주문: $couponCount 건\n";
         $purchaseMsg = $purchaseMsg . "\t총 주문: " . $orderCount . " 건\n";
 
         $purchaseMsg = $purchaseMsg . "---------------------------------------";
@@ -114,7 +119,7 @@ class Daily extends Command
             'to_date' => Carbon::now()->toDateString(),
             'events' => [
                 [
-                    'event' => "Submit Cart"
+                    'event' => "Create Order"
                 ],
                 [
                     'event' => "Sign Up"
