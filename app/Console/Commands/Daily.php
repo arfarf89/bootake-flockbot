@@ -6,15 +6,15 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
-class QueryHourly extends Command
+class Daily extends Command
 {
-    protected $signature = 'hourly';
+    protected $signature = 'daily';
 
     /**
      * The console command description.
      * @var string
      */
-    protected $description = 'Query hourly information';
+    protected $description = 'Query daily information';
 
     public function __construct()
     {
@@ -27,7 +27,7 @@ class QueryHourly extends Command
      */
     public function handle()
     {
-        Log::info('schedule:run hourly');
+        Log::info('schedule:run daily');
         $purchaseData = $this->purchase();
         $purchaseData = json_decode(json_encode($purchaseData), true);
 
@@ -36,65 +36,56 @@ class QueryHourly extends Command
         $day = $today->format('d');
         $hour = strval($today->format('H'));
 
-        $purchaseMsg = "========================\n" . $month . '월 ' . $day . "일 " . ($hour - 1) . "시 - " .
-                        $hour . "시 주문 현황\n" . "========================\n";
+        $purchaseMsg = "========================\n" . $month . '월 ' . $day . "일 주문 결산\n" .
+                        "========================\n";
 
         $peperoEventCount = 0;
         $couponCount = 0;
         $cuAppCount = 0;
-        $platformCount = [
-            'ANDROID' => 0,
-            'IOS' => 0,
-            'WEB' => 0,
-            'ANDROID_WEB' => 0,
-            'IOS_WEB' => 0
-        ];
         $cuCount = 0;
+        $signUpCount = 0;
+        $orderCount = 0;
 
         foreach ($purchaseData as $event) {
-            // TODO Match with storeid
-            if (strval($event["properties"]["Store ID"]) == 28777) {
-                $peperoEventCount += 1;
-            } elseif (strpos($event["properties"]["Store Name"], 'CU') !== false) {
-                $cuCount += 1;
+
+            if ($event["name"] == "Submit Cart") {
+                // TODO Match with storeid
+                if ($event["properties"]["Store Name"] == "CU 빼빼로데이 예약배송 이벤트!") {
+                    $peperoEventCount += 1;
+                } elseif (strpos($event["properties"]["Store Name"], 'CU') !== false) {
+                    $cuCount += 1;
+                }
+
+                if ($event["properties"]["Coupon"] != null) {
+                    $couponCount += 1;
+                }
+
+                if ($event["properties"]["App"] == "CUMobileApp") {
+                    $cuAppCount += 1;
+                }
+
+                $orderCount += 1;
             }
 
-            var_export($event);
-
-            if (isset($event['properties']['Coupon'])) {
-                $couponCount += 1;
+            if ($event["name"] == "Sign Up") {
+                $signUpCount += 1;
             }
-//            if ($event["properties"].array_ke("[\"Coupon\"]") && $event["properties"]["Coupon"] != null) {
-//                $couponCount += 1;
-//            }
-////                $couponCount += 1;
-//            if ($event["properties"]["Coupon"] != null) {
-//
-//            }
-
-            if ($event["properties"]["App"] == "CUMobileApp") {
-                $cuAppCount += 1;
-            }
-
-//            $platform = $event["properties"]["Platform"];
-//            $platformCount[$platform] += 1;
         }
 
-        $purchaseMsg = $purchaseMsg . "빼빼로 예약배송 주문: $peperoEventCount 건\n";
-        $purchaseMsg = $purchaseMsg . "쿠폰 이용 주문: $couponCount 건\n";
-        $purchaseMsg = $purchaseMsg . "CU 주문: $cuCount 건\n";
-        $purchaseMsg = $purchaseMsg . "\tCU 모바일앱 주문: $cuAppCount 건\n";
-        $purchaseMsg = $purchaseMsg . "\n";
-        $purchaseMsg = $purchaseMsg . "총 주문: " . count($purchaseData) . " 건\n";
-//        foreach ($platformCount as $key => $value) {
-//            $purchaseMsg = $purchaseMsg . "\t" . $key . ": " . $value . "건\n";
-//        }
-        $purchaseMsg = $purchaseMsg . "---------------------------------------\n\n\n";
+        $purchaseMsg = $purchaseMsg . "회원 가입: $signUpCount 건\n\n";
+
+        $purchaseMsg = $purchaseMsg . "주문 정보:\n";
+        $purchaseMsg = $purchaseMsg . "\t빼빼로 예약배송: $peperoEventCount 건\n";
+        $purchaseMsg = $purchaseMsg . "\t쿠폰 이용: $couponCount 건\n";
+        $purchaseMsg = $purchaseMsg . "\tCU: $cuCount 건\n";
+        $purchaseMsg = $purchaseMsg . "\t총 주문: " . $orderCount . " 건\n";
+
+        $purchaseMsg = $purchaseMsg . "---------------------------------------";
 
         $seriousBotUrl = "https://api.flock.co/hooks/sendMessage/989d90d3-7b19-4ac3-a6c6-0aa1d50e956b";
         $funBotUrl = "https://api.flock.co/hooks/sendMessage/6725b5fa-ea47-4c6a-9b1f-a0c3371c83ff";
 
-        $this->curlFlock($seriousBotUrl, $purchaseMsg);
+//        $this->curlFlock($seriousBotUrl, $purchaseMsg);
         $this->curlFlock($funBotUrl, $purchaseMsg);
 
     }
@@ -121,10 +112,12 @@ class QueryHourly extends Command
         $params = json_encode([
             'from_date' => Carbon::now()->toDateString(),
             'to_date' => Carbon::now()->toDateString(),
-            'hour' => Carbon::now()->subHour(1)->format('H'),
             'events' => [
                 [
-                    'event' => "Create Order"
+                    'event' => "Submit Cart"
+                ],
+                [
+                    'event' => "Sign Up"
                 ]
             ]
         ]);
