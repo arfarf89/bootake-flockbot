@@ -28,10 +28,12 @@ class Daily extends Command
     public function handle()
     {
         Log::info('schedule:run daily');
-        $purchaseData = $this->purchase();
+        
+        $today = Carbon::now();
+
+        $purchaseData = $this->purchase($today);
         $purchaseData = json_decode(json_encode($purchaseData), true);
 
-        $today = Carbon::now();
         $month = $today->format('m');
         $day = $today->format('d');
         $hour = strval($today->format('H'));
@@ -107,16 +109,15 @@ class Daily extends Command
         curl_close($newCurl);
     }
 
-    private function purchase()
-    {
+    private function purchase($today)
         $api_secret = "4e4ed3a7df70b32e07cf956c2d79dc4f";
         $headers = array("Authorization: Basic " . base64_encode($api_secret));
 
         $path = "purchase.js";
         $scriptContents = file_get_contents($path);
         $params = json_encode([
-            'from_date' => Carbon::now()->toDateString(),
-            'to_date' => Carbon::now()->toDateString(),
+            'from_date' => $today->toDateString(),
+            'to_date' => $today->toDateString(),
             'events' => [
                 [
                     'event' => "Create Order"

@@ -28,10 +28,12 @@ class QueryHourly extends Command
     public function handle()
     {
         Log::info('schedule:run hourly');
-        $purchaseData = $this->purchase();
-        $purchaseData = json_decode(json_encode($purchaseData), true);
-
+        
         $today = Carbon::now();
+
+        $purchaseData = $this->purchase($today);
+        $purchaseData = json_decode(json_encode($purchaseData), true);
+        
         $month = $today->format('m');
         $day = $today->format('d');
         $hour = strval($today->format('H'));
@@ -86,7 +88,7 @@ class QueryHourly extends Command
         foreach ($platformCount as $key => $value) {
             $purchaseMsg = $purchaseMsg . "\t" . $key . ": " . $value . "건\n";
         }
-        
+
         $purchaseMsg = $purchaseMsg . "---------------------------------------\n\n\n";
 
         // $seriousBotUrl = "https://api.flock.co/hooks/sendMessage/989d90d3-7b19-4ac3-a6c6-0aa1d50e956b";
@@ -109,7 +111,7 @@ class QueryHourly extends Command
         curl_close($newCurl);
     }
 
-    private function purchase()
+    private function purchase($today)
     {
         $api_secret = "4e4ed3a7df70b32e07cf956c2d79dc4f";
         $headers = array("Authorization: Basic " . base64_encode($api_secret));
@@ -117,9 +119,9 @@ class QueryHourly extends Command
         $path = "purchase.js";
         $scriptContents = file_get_contents($path);
         $params = json_encode([
-            'from_date' => Carbon::now()->toDateString(),
-            'to_date' => Carbon::now()->toDateString(),
-            'hour' => Carbon::now()->subHour(1)->format('H'),
+            'from_date' => $today->toDateString(),
+            'to_date' => $today->toDateString(),
+            'hour' => $today->subHour(1)->format('H'),
             'events' => [
                 [
                     'event' => "Create Order"
